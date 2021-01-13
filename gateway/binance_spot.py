@@ -190,7 +190,15 @@ class BinanceSpotHttp(object):
         return order
 
     def get_order_from_cache(self, client_order_id: str):
-        return json.load(r.get(client_order_id))
+        cache = json.load(r.get(client_order_id))
+        if cache is not None:
+            cache = {
+                'clientOrderId': cache['c'],
+                'origQty': cache['q'],
+                'price': cache['p'],
+                'status': cache['X']
+                }
+        return cache
     
     def get_order_from_api(self, symbol: str, client_order_id: str):
         path = "/api/v3/order"

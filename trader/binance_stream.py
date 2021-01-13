@@ -16,7 +16,7 @@ class BinanceStream(object):
     self.client = Client(api_key=config.api_key, api_secret=config.api_secret)
     self.manager = BinanceSocketManager(self.client, user_timeout=30)
     self.user_socket = self.manager.start_user_socket(self.process_order)
-    self.ticker_socket = self.manager.start_symbol_book_ticker_socket(self.process_tick)
+    self.ticker_socket = self.manager.start_symbol_book_ticker_socket(config.symbol, self.process_tick)
     self.r = redis.Redis(host='localhost', port=6379, db=0)
     self.buy_orders = []
     self.sell_orders = []
