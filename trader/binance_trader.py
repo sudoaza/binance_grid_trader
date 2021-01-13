@@ -52,7 +52,6 @@ class BinanceTrader(object):
 
     def grid_trader(self):
         """
-        执行核心逻辑，网格交易的逻辑.
         :return:
         """
 
@@ -61,17 +60,15 @@ class BinanceTrader(object):
 
         quantity = round_to(float(config.quantity), float(config.min_qty))
 
-        self.buy_orders.sort(key=lambda x: float(x['price']), reverse=True)  # 最高价到最低价.
-        self.sell_orders.sort(key=lambda x: float(x['price']), reverse=True)  # 最高价到最低价.
+        self.buy_orders.sort(key=lambda x: float(x['price']), reverse=True)
+        self.sell_orders.sort(key=lambda x: float(x['price']), reverse=True)
         print(f"buy orders: {self.buy_orders}")
         print("------------------------------")
         print(f"sell orders: {self.sell_orders}")
 
-        buy_delete_orders = []  # 需要删除买单
-        sell_delete_orders = [] # 需要删除的卖单
+        buy_delete_orders = []
+        sell_delete_orders = []
 
-
-        # 买单逻辑,检查成交的情况.
         for buy_order in self.buy_orders:
 
             check_order = self.http_client.get_order(buy_order.get('symbol', config.symbol),client_order_id=buy_order.get('clientOrderId'))
@@ -81,14 +78,12 @@ class BinanceTrader(object):
                     buy_delete_orders.append(buy_order)
                     print(f"buy order status was canceled: {check_order.get('status')}")
                 elif check_order.get('status') == OrderStatus.FILLED.value:
-                    # 买单成交，挂卖单.
                     logging.info(f"Buy TX time: {datetime.now()}, price: {check_order.get('price')}, size: {check_order.get('origQty')}")
 
 
                     sell_price = round_to(float(check_order.get("price")) * (1 + float(config.gap_percent)), float(config.min_price))
 
                     if 0 < sell_price < ask_price:
-                        # 防止价格
                         sell_price = round_to(ask_price, float(config.min_price))
 
                     new_sell_order = self.http_client.place_order(symbol=config.symbol, order_side=OrderSide.SELL, order_type=OrderType.LIMIT, quantity=quantity, price=sell_price)
