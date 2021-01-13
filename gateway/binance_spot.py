@@ -123,7 +123,7 @@ class BinanceSpotHttp(object):
                 else:
                     print(response.json(), response.status_code)
             except Exception as error:
-                print(f"请求:{path}, 发生了错误: {error}")
+                print(f"req: {path}, err: {error}")
                 time.sleep(3)
 
     def get_server_time(self):
@@ -374,3 +374,4 @@ class BinanceSpotHttp(object):
                   "recvWindow": self.recv_window
                   }
         return self.request(RequestMethod.GET, path, params, verify=True)
+

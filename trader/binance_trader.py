@@ -82,7 +82,7 @@ class BinanceTrader(object):
                     print(f"buy order status was canceled: {check_order.get('status')}")
                 elif check_order.get('status') == OrderStatus.FILLED.value:
                     # 买单成交，挂卖单.
-                    logging.info(f"买单成交时间: {datetime.now()}, 价格: {check_order.get('price')}, 数量: {check_order.get('origQty')}")
+                    logging.info(f"Buy TX time: {datetime.now()}, price: {check_order.get('price')}, size: {check_order.get('origQty')}")
 
 
                     sell_price = round_to(float(check_order.get("price")) * (1 + float(config.gap_percent)), float(config.min_price))
@@ -102,6 +102,7 @@ class BinanceTrader(object):
                         buy_price = round_to(bid_price, float(config.min_price))
 
                     new_buy_order = self.http_client.place_order(symbol=config.symbol, order_side=OrderSide.BUY, order_type=OrderType.LIMIT, quantity=quantity, price=buy_price)
+                    print(new_buy_order)
                     if new_buy_order:
                         self.buy_orders.append(new_buy_order)
 
@@ -127,7 +128,7 @@ class BinanceTrader(object):
                     print(f"sell order status was canceled: {check_order.get('status')}")
                 elif check_order.get('status') == OrderStatus.FILLED.value:
                     logging.info(
-                        f"卖单成交时间: {datetime.now()}, 价格: {check_order.get('price')}, 数量: {check_order.get('origQty')}")
+                            f"Sell TX time: {datetime.now()}, price: {check_order.get('price')}, size: {check_order.get('origQty')}")
                     # 卖单成交，先下买单.
                     buy_price = round_to(float(check_order.get("price")) * (1 - float(config.gap_percent)), float(config.min_price))
                     if buy_price > bid_price > 0:
@@ -194,3 +195,5 @@ class BinanceTrader(object):
                                                   client_order_id=delete_order.get('clientOrderId'))
             if order:
                 self.sell_orders.remove(delete_order)
+
+

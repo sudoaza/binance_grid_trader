@@ -42,9 +42,9 @@ if __name__ == '__main__':
     while True:
         try:
             trader.grid_trader()
-            time.sleep(20)
+            time.sleep(10)
 
         except Exception as error:
-            print(f"catch error: {error}")
-            time.sleep(5)
+            print(f"catch ERROR: {error}")
+            time.sleep(20)
 
