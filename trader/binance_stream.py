@@ -33,13 +33,7 @@ class BinanceStream(object):
         print("Saved: ",msg)
 
   def process_tick(self,msg):
-    if msg['e'] == 'error':
-      # close and restart the socket
-      print("ERROR:", msg)
-    else:
-      print("message type: {}".format(msg['e']))
-
-      if msg['e'] == 'bookTicker' and msg['s'] == config.symbol :
+    if msg['s'] == config.symbol:
         self.r.set('bookTicker_' + msg['s'], json.dumps(msg))
         print("Saved: ",msg)
 

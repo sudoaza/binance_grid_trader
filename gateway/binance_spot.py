@@ -59,7 +59,7 @@ class BinanceSpotHttp(object):
         keys.sort()
         return '&'.join([f"{key}={params[key]}" for key in params.keys()])
 
-    def request(self, req_method: RequestMethod, path: str, requery_dict=None, verify=False):
+    def request(self, req_method: str, path: str, requery_dict=None, verify=False):
         url = self.host + path
 
         if verify:
