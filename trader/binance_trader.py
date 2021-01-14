@@ -53,26 +53,20 @@ class BinanceTrader(object):
                 client_order_id=buy_order.get('clientOrderId'))
 
             if check_order:
-                switch (check_order.get('status')) {
-                    case OrderStatus.CANCELED.value:
-                        delete_orders.append(order)
-                        print(f"{order.get('side')} order CANCELLED {order.get('clientOrderId')}")
-                        break
+                if check_order.get('status') == OrderStatus.CANCELED.value:
+                    delete_orders.append(order)
+                    print(f"{order.get('side')} order CANCELLED {order.get('clientOrderId')}")
 
-                    case OrderStatus.FILLED.value:
-                        logging.info(f"{order.get('side')} TX time: {datetime.now()}, price: {check_order.get('price')}, size: {check_order.get('origQty')}")
-                        delete_orders.append(order)
-                        self.place_order(check_order.get('price'))
-                        break
+                elif check_order.get('status') == OrderStatus.FILLED.value:
+                    logging.info(f"{order.get('side')} TX time: {datetime.now()}, price: {check_order.get('price')}, size: {check_order.get('origQty')}")
+                    delete_orders.append(order)
+                    self.place_order(check_order.get('price'))
 
-                    case OrderStatus.NEW.value:
-                        print(f"{order.get('side')} order is NEW")
-                        break
+                elif check_order.get('status') ==  OrderStatus.NEW.value:
+                    print(f"{order.get('side')} order is NEW")
 
-                    default:
-                        print(f"{order.get('side')}  order STATUS is NOT known: {check_order.get('status')}")
-
-                }
+                else:
+                    print(f"{order.get('side')}  order STATUS is NOT known: {check_order.get('status')}")
 
         for delete_order in delete_orders:
             self.buy_orders.remove(delete_order)
