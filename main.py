@@ -36,8 +36,8 @@ if __name__ == '__main__':
         trader = BinanceTrader()
     else:
         trader = BinanceFutureTrader()
-    orders = trader.http_client.cancel_open_orders(config.symbol)
-    print(f"cancel orders: {orders}")
+    #orders = trader.http_client.cancel_open_orders(config.symbol)
+    #print(f"cancel orders: {orders}")
 
     while True:
         try:

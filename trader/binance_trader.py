@@ -17,7 +17,7 @@
 """
 
 
-from gateway import BinanceSpotHttp, OrderStatus, OrderType, OrderSide
+from gateway import BinanceSpotHttp, OrderStatus, OrderType
 from utils import config
 from utils import utility, round_to
 from enum import Enum
@@ -86,7 +86,7 @@ class BinanceTrader(object):
                     if 0 < sell_price < ask_price:
                         sell_price = round_to(ask_price, float(config.min_price))
 
-                    new_sell_order = self.http_client.place_order(symbol=config.symbol, order_side=OrderSide.SELL, order_type=OrderType.LIMIT, quantity=quantity, price=sell_price)
+                    new_sell_order = self.http_client.place_order(symbol=config.symbol, order_side='SELL', order_type=OrderType.LIMIT, quantity=quantity, price=sell_price)
                     if new_sell_order:
                         buy_delete_orders.append(buy_order)
                         self.sell_orders.append(new_sell_order)
@@ -96,7 +96,7 @@ class BinanceTrader(object):
                     if buy_price > bid_price > 0:
                         buy_price = round_to(bid_price, float(config.min_price))
 
-                    new_buy_order = self.http_client.place_order(symbol=config.symbol, order_side=OrderSide.BUY, order_type=OrderType.LIMIT, quantity=quantity, price=buy_price)
+                    new_buy_order = self.http_client.place_order(symbol=config.symbol, order_side='BUY', order_type=OrderType.LIMIT, quantity=quantity, price=buy_price)
                     print(new_buy_order)
                     if new_buy_order:
                         self.buy_orders.append(new_buy_order)
@@ -129,7 +129,7 @@ class BinanceTrader(object):
                     if buy_price > bid_price > 0:
                         buy_price = round_to(bid_price, float(config.min_price))
 
-                    new_buy_order = self.http_client.place_order(symbol=config.symbol, order_side=OrderSide.BUY,
+                    new_buy_order = self.http_client.place_order(symbol=config.symbol, order_side='BUY',
                                                              order_type=OrderType.LIMIT, quantity=quantity, price=buy_price)
                     if new_buy_order:
                         sell_delete_orders.append(sell_order)
@@ -141,7 +141,7 @@ class BinanceTrader(object):
                         # 防止价格
                         sell_price = round_to(ask_price, float(config.min_price))
 
-                    new_sell_order = self.http_client.place_order(symbol=config.symbol, order_side=OrderSide.SELL,
+                    new_sell_order = self.http_client.place_order(symbol=config.symbol, order_side='SELL',
                                                                  order_type=OrderType.LIMIT, quantity=quantity,
                                                                  price=sell_price)
                     if new_sell_order:
@@ -160,7 +160,7 @@ class BinanceTrader(object):
         if len(self.buy_orders) <= 0:
             if bid_price > 0:
                 price = round_to(bid_price * (1 - float(config.gap_percent)), float(config.min_price))
-                buy_order = self.http_client.place_order(symbol=config.symbol,order_side=OrderSide.BUY, order_type=OrderType.LIMIT, quantity=quantity,price=price)
+                buy_order = self.http_client.place_order(symbol=config.symbol,order_side='BUY', order_type=OrderType.LIMIT, quantity=quantity,price=price)
                 if buy_order:
                     self.buy_orders.append(buy_order)
 
@@ -177,7 +177,7 @@ class BinanceTrader(object):
         if len(self.sell_orders) <= 0:
             if ask_price > 0:
                 price = round_to(ask_price * (1 + float(config.gap_percent)), float(config.min_price))
-                order = self.http_client.place_order(symbol=config.symbol,order_side=OrderSide.SELL, order_type=OrderType.LIMIT, quantity=quantity,price=price)
+                order = self.http_client.place_order(symbol=config.symbol,order_side='SELL', order_type=OrderType.LIMIT, quantity=quantity,price=price)
                 if order:
                     self.sell_orders.append(order)
 

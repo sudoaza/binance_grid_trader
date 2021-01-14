@@ -17,7 +17,7 @@
 """
 
 
-from gateway import BinanceFutureHttp, OrderStatus, OrderType, OrderSide
+from gateway import BinanceFutureHttp, OrderStatus, OrderType
 from utils import config
 from utils import utility, round_to
 from enum import Enum
