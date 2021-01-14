@@ -116,11 +116,14 @@ class BinanceTrader(object):
         elif side == 'SELL':
             if 0 < price < self.ask_price:
                 price = round_to(self.ask_price, float(config.min_price))
+        
+        return price
 
     def size(self):
         return round_to(float(config.quantity), float(config.min_qty))
 
     def create_order(self, side, price, size):
+        print("size: ", size, "price: ", price)
         new_order = self.http_client.place_order(symbol=config.symbol, order_side=side, order_type=OrderType.LIMIT, quantity=size, price=price)
         if new_order:
             if side == 'SELL':

@@ -34,8 +34,11 @@ class BinanceStream(object):
 
   def process_tick(self,msg):
     if msg['s'] == config.symbol:
-        self.r.set('bookTicker_' + msg['s'], json.dumps(msg))
-        print("Saved: ",msg)
+        name = 'bookTicker_' + msg['s']
+        json_msg = json.dumps(msg)
+        self.r.set(name, json_msg)
+        self.r.xadd("stream_" + name, json_msg)
+        print("Saved: ", json_msg)
 
   def start(self):
     self.manager.start()
