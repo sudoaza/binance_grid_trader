@@ -13,10 +13,10 @@ class BinanceTrader(object):
         :param secret:
         :param trade_type: 交易的类型， only support future and spot.
         """
-        self.http_client = BinanceSpotHttp(api_key=config.api_key, secret=config.api_secret, proxy_host=config.proxy_host, proxy_port=config.proxy_port)
+        self.http_client = BinanceSpotHttp(api_key=config.api_key, secret=config.api_secret)
 
-        self.buy_orders = []  # 买单.
-        self.sell_orders = [] # 卖单.
+        self.buy_orders = []
+        self.sell_orders = []
 
 
     def get_bid_ask_price(self):
@@ -73,15 +73,15 @@ class BinanceTrader(object):
             self.sell_orders.remove(delete_order)
 
         if len(self.buy_orders) <= 0:
-            if bid_price > 0:
-                self.place_buy(bid_price)
+            if self.bid_price > 0:
+                self.place_buy(self.bid_price)
 
         elif len(self.buy_orders) > int(config.max_orders):
             self.cancel('BUY')
 
         if len(self.sell_orders) <= 0:
-            if ask_price > 0:
-                self.place_sell(ask_price)
+            if self.ask_price > 0:
+                self.place_sell(self.ask_price)
 
         elif len(self.sell_orders) > int(config.max_orders):
             self.cancel('SELL')
@@ -132,10 +132,10 @@ class BinanceTrader(object):
         self.place_sell(last_price)
         self.place_buy(last_price)
 
-    def place_sell(self, last_price)
+    def place_sell(self, last_price):
         sell_price = self.price(last_price,'SELL')
         self.create_order('SELL', sell_price, self.size())
 
-    def place_buy(self, last_price)
+    def place_buy(self, last_price):
         buy_price = self.price(last_price,'BUY')
         self.create_order('BUY', buy_price, self.size())
