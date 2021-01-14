@@ -20,9 +20,7 @@ class BinanceTrader(object):
 
 
     def get_bid_ask_price(self):
-
         ticker = self.http_client.get_ticker(config.symbol)
-
         bid_price = 0
         ask_price = 0
         if ticker:
@@ -50,7 +48,7 @@ class BinanceTrader(object):
         for order in (self.buy_orders + self.sell_orders):
             check_order = self.http_client.get_order(
                 order.get('symbol', config.symbol),
-                client_order_id=buy_order.get('clientOrderId'))
+                client_order_id=order.get('clientOrderId'))
 
             if check_order:
                 if check_order.get('status') == OrderStatus.CANCELED.value:
@@ -69,8 +67,11 @@ class BinanceTrader(object):
                     print(f"{order.get('side')}  order STATUS is NOT known: {check_order.get('status')}")
 
         for delete_order in delete_orders:
-            self.buy_orders.remove(delete_order)
-            self.sell_orders.remove(delete_order)
+            if delete_order.get('side') == 'BUY':
+                self.buy_orders.remove(delete_order)
+
+            if delete_order.get('side') == 'SELL':
+                self.sell_orders.remove(delete_order)
 
         if len(self.buy_orders) <= 0:
             if self.bid_price > 0:
