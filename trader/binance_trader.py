@@ -1,22 +1,3 @@
-"""
-    币安推荐码:  返佣10%
-    https://www.binancezh.pro/cn/register?ref=AIR1GC70
-
-    币安合约推荐码: 返佣10%
-    https://www.binancezh.com/cn/futures/ref/51bitquant
-
-    if you don't have a binance account, you can use the invitation link to register one:
-    https://www.binancezh.com/cn/futures/ref/51bitquant
-
-    or use the inviation code: 51bitquant
-
-    网格交易: 适合币圈的高波动率的品种，适合现货， 如果交易合约，需要注意防止极端行情爆仓。
-
-
-    服务器购买地址: https://www.ucloud.cn/site/global.html?invitation_code=C1x2EA81CD79B8C#dongjing
-"""
-
-
 from gateway import BinanceSpotHttp, OrderStatus, OrderType
 from utils import config
 from utils import utility, round_to
@@ -55,140 +36,112 @@ class BinanceTrader(object):
         :return:
         """
 
-        bid_price, ask_price = self.get_bid_ask_price()
-        print(f"bid_price: {bid_price}, ask_price: {ask_price}")
+        self.bid_price, self.ask_price = self.get_bid_ask_price()
+        print(f"bid_price: {self.bid_price}, ask_price: {self.ask_price}")
 
-        quantity = round_to(float(config.quantity), float(config.min_qty))
-
-        self.buy_orders.sort(key=lambda x: float(x['price']), reverse=True)
+        self.buy_orders.sort(key=lambda x: float(x['price']), reverse=False)
         self.sell_orders.sort(key=lambda x: float(x['price']), reverse=True)
         print(f"buy orders: {self.buy_orders}")
         print("------------------------------")
         print(f"sell orders: {self.sell_orders}")
 
-        buy_delete_orders = []
-        sell_delete_orders = []
+        delete_orders = []
 
-        for buy_order in self.buy_orders:
-
-            check_order = self.http_client.get_order(buy_order.get('symbol', config.symbol),client_order_id=buy_order.get('clientOrderId'))
+        for order in (self.buy_orders, self.sell_orders):
+            check_order = self.http_client.get_order(
+                order.get('symbol', config.symbol),
+                client_order_id=buy_order.get('clientOrderId'))
 
             if check_order:
-                if check_order.get('status') == OrderStatus.CANCELED.value:
-                    buy_delete_orders.append(buy_order)
-                    print(f"buy order status was canceled: {check_order.get('status')}")
-                elif check_order.get('status') == OrderStatus.FILLED.value:
-                    logging.info(f"Buy TX time: {datetime.now()}, price: {check_order.get('price')}, size: {check_order.get('origQty')}")
+                switch (check_order.get('status')) {
+                    case OrderStatus.CANCELED.value:
+                        delete_orders.append(order)
+                        print(f"{order.get('side')} order CANCELLED {order.get('clientOrderId')}")
+                        break
 
+                    case OrderStatus.FILLED.value:
+                        logging.info(f"{order.get('side')} TX time: {datetime.now()}, price: {check_order.get('price')}, size: {check_order.get('origQty')}")
+                        delete_orders.append(order)
+                        self.place_order(check_order.get('price'))
+                        break
 
-                    sell_price = round_to(float(check_order.get("price")) * (1 + float(config.gap_percent)), float(config.min_price))
+                    case OrderStatus.NEW.value:
+                        print(f"{order.get('side')} order is NEW")
+                        break
 
-                    if 0 < sell_price < ask_price:
-                        sell_price = round_to(ask_price, float(config.min_price))
+                    default:
+                        print(f"{order.get('side')}  order STATUS is NOT known: {check_order.get('status')}")
 
-                    new_sell_order = self.http_client.place_order(symbol=config.symbol, order_side='SELL', order_type=OrderType.LIMIT, quantity=quantity, price=sell_price)
-                    if new_sell_order:
-                        buy_delete_orders.append(buy_order)
-                        self.sell_orders.append(new_sell_order)
+                }
 
-                    buy_price = round_to(float(check_order.get("price")) * (1 - float(config.gap_percent)),
-                                     config.min_price)
-                    if buy_price > bid_price > 0:
-                        buy_price = round_to(bid_price, float(config.min_price))
-
-                    new_buy_order = self.http_client.place_order(symbol=config.symbol, order_side='BUY', order_type=OrderType.LIMIT, quantity=quantity, price=buy_price)
-                    print(new_buy_order)
-                    if new_buy_order:
-                        self.buy_orders.append(new_buy_order)
-
-
-                elif check_order.get('status') == OrderStatus.NEW.value:
-                    print("buy order status is: New")
-                else:
-                    print(f"buy order status is not above options: {check_order.get('status')}")
-
-        # 过期或者拒绝的订单删除掉.
-        for delete_order in buy_delete_orders:
+        for delete_order in delete_orders:
             self.buy_orders.remove(delete_order)
-
-        # 卖单逻辑, 检查卖单成交情况.
-        for sell_order in self.sell_orders:
-
-            check_order = self.http_client.get_order(sell_order.get('symbol', config.symbol),
-                                               client_order_id=sell_order.get('clientOrderId'))
-            if check_order:
-                if check_order.get('status') == OrderStatus.CANCELED.value:
-                    sell_delete_orders.append(sell_order)
-
-                    print(f"sell order status was canceled: {check_order.get('status')}")
-                elif check_order.get('status') == OrderStatus.FILLED.value:
-                    logging.info(
-                            f"Sell TX time: {datetime.now()}, price: {check_order.get('price')}, size: {check_order.get('origQty')}")
-                    # 卖单成交，先下买单.
-                    buy_price = round_to(float(check_order.get("price")) * (1 - float(config.gap_percent)), float(config.min_price))
-                    if buy_price > bid_price > 0:
-                        buy_price = round_to(bid_price, float(config.min_price))
-
-                    new_buy_order = self.http_client.place_order(symbol=config.symbol, order_side='BUY',
-                                                             order_type=OrderType.LIMIT, quantity=quantity, price=buy_price)
-                    if new_buy_order:
-                        sell_delete_orders.append(sell_order)
-                        self.buy_orders.append(new_buy_order)
-
-                    sell_price = round_to(float(check_order.get("price")) * (1 + float(config.gap_percent)), float(config.min_price))
-
-                    if 0 < sell_price < ask_price:
-                        # 防止价格
-                        sell_price = round_to(ask_price, float(config.min_price))
-
-                    new_sell_order = self.http_client.place_order(symbol=config.symbol, order_side='SELL',
-                                                                 order_type=OrderType.LIMIT, quantity=quantity,
-                                                                 price=sell_price)
-                    if new_sell_order:
-                        self.sell_orders.append(new_sell_order)
-
-                elif check_order.get('status') == OrderStatus.NEW.value:
-                    print("sell order status is: New")
-                else:
-                    print(f"sell order status is not in above options: {check_order.get('status')}")
-
-        # 过期或者拒绝的订单删除掉.
-        for delete_order in sell_delete_orders:
             self.sell_orders.remove(delete_order)
 
-        # 没有买单的时候.
         if len(self.buy_orders) <= 0:
             if bid_price > 0:
-                price = round_to(bid_price * (1 - float(config.gap_percent)), float(config.min_price))
-                buy_order = self.http_client.place_order(symbol=config.symbol,order_side='BUY', order_type=OrderType.LIMIT, quantity=quantity,price=price)
-                if buy_order:
-                    self.buy_orders.append(buy_order)
+                self.place_buy(bid_price)
 
-        elif len(self.buy_orders) > int(config.max_orders): # 最多允许的挂单数量.
-            # 订单数量比较多的时候.
-            self.buy_orders.sort(key=lambda x: float(x['price']), reverse=False)  # 最低价到最高价
+        elif len(self.buy_orders) > int(config.max_orders):
+            self.cancel('BUY')
 
-            delete_order = self.buy_orders[0]
-            order = self.http_client.cancel_order(delete_order.get('symbol'), client_order_id=delete_order.get('clientOrderId'))
-            if order:
-                self.buy_orders.remove(delete_order)
-
-        # 没有卖单的时候.
         if len(self.sell_orders) <= 0:
             if ask_price > 0:
-                price = round_to(ask_price * (1 + float(config.gap_percent)), float(config.min_price))
-                order = self.http_client.place_order(symbol=config.symbol,order_side='SELL', order_type=OrderType.LIMIT, quantity=quantity,price=price)
-                if order:
-                    self.sell_orders.append(order)
+                self.place_sell(ask_price)
 
-        elif len(self.sell_orders) > int(config.max_orders): # 最多允许的挂单数量.
-            # 订单数量比较多的时候.
-            self.sell_orders.sort(key=lambda x: x['price'], reverse=True)  # 最高价到最低价
+        elif len(self.sell_orders) > int(config.max_orders):
+            self.cancel('SELL')
 
-            delete_order = self.sell_orders[0]
-            order = self.http_client.cancel_order(delete_order.get('symbol'),
-                                                  client_order_id=delete_order.get('clientOrderId'))
-            if order:
-                self.sell_orders.remove(delete_order)
+    def cancel(self, side):
+        if side == 'BUY':
+            orders = self.buy_orders
+        elif side == 'SELL':
+            orders = self.sell_orders
 
+        delete_order = orders[0]
+        order = self.http_client.cancel_order(delete_order.get('symbol'), client_order_id=delete_order.get('clientOrderId'))
+        if order:
+            orders.remove(delete_order)
 
+    def price(self, last, side):
+        gap = float(config.gap_percent)
+        if side == 'BUY':
+            gap = -gap
+        elif side == 'SELL':
+            pass
+        else:
+            print(f"ERROR {side} not BUY/SELL")
+            return last
+
+        price = round_to(float(last) * (1 + gap), float(config.min_price))
+
+        if side == 'BUY':
+            if price > self.bid_price > 0:
+                price = round_to(self.bid_price, float(config.min_price))
+
+        elif side == 'SELL':
+            if 0 < price < self.ask_price:
+                price = round_to(self.ask_price, float(config.min_price))
+
+    def size(self):
+        return round_to(float(config.quantity), float(config.min_qty))
+
+    def create_order(self, side, price, size):
+        new_order = self.http_client.place_order(symbol=config.symbol, order_side=side, order_type=OrderType.LIMIT, quantity=size, price=price)
+        if new_order:
+            if side == 'SELL':
+                self.sell_orders.append(new_order)
+            elif side == 'BUY':
+                self.buy_orders.append(new_order)
+
+    def place_order(self, last_price):
+        self.place_sell(last_price)
+        self.place_buy(last_price)
+
+    def place_sell(self, last_price)
+        sell_price = self.price(last_price,'SELL')
+        self.create_order('SELL', sell_price, self.size())
+
+    def place_buy(self, last_price)
+        buy_price = self.price(last_price,'BUY')
+        self.create_order('BUY', buy_price, self.size())
