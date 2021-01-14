@@ -10,7 +10,6 @@ logger = logging.getLogger('binance')
 
 if __name__ == '__main__':
 
-
     config.loads('./config.json')
 
     if config.platform == 'binance_spot':

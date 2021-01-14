@@ -35,7 +35,9 @@ class BinanceTrader(object):
         """
 
         self.bid_price, self.ask_price = self.get_bid_ask_price()
-        print(f"bid_price: {self.bid_price}, ask_price: {self.ask_price}")
+        self.avg_price = self.http_client.get_avg_price()
+
+        print(f"bid_price: {self.bid_price}, ask_price: {self.ask_price}, avg_price: {self.avg_price}")
 
         self.buy_orders.sort(key=lambda x: float(x['price']), reverse=False)
         self.sell_orders.sort(key=lambda x: float(x['price']), reverse=True)

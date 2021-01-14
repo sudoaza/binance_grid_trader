@@ -65,6 +65,18 @@ class BinanceSpotHttp(object):
             print("ERROR: ", error)
             return
 
+    def stream(self, name, count):
+        try:
+            cache = self.r.xread(name, count=count, block=200)
+            if cache is not None:
+                print(cache)
+                cache = [json.loads(e.decode('utf-8')) for e in cache]
+            
+            return cache
+        except Exception as error:
+            print("ERROR: ", error)
+            return
+
     def build_parameters(self, params: dict):
         keys = list(params.keys())
         keys.sort()
@@ -125,6 +137,10 @@ class BinanceSpotHttp(object):
         path = "/api/v3/ticker/bookTicker"
         query_dict = {"symbol": symbol}
         return self.request('GET', path, query_dict)
+
+    def get_avg_price(self, symbol: str):
+        cache = self.stream('stream_bookTicker_' + symbol, 100)
+        return (float(cache[-1]['a']) + float(cache[-1]['b'])) / 2
 
     def get_client_order_id(self):
         """

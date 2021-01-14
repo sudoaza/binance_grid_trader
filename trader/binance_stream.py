@@ -37,7 +37,7 @@ class BinanceStream(object):
         name = 'bookTicker_' + msg['s']
         json_msg = json.dumps(msg)
         self.r.set(name, json_msg)
-        self.r.xadd("stream_" + name, json_msg)
+        self.r.xadd("stream_" + name, json_msg, maxlen=100)
         print("Saved: ", json_msg)
 
   def start(self):
