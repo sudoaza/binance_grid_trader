@@ -67,12 +67,8 @@ class BinanceSpotHttp(object):
 
     def stream(self, name, count):
         try:
-            cache = self.r.xread(name, count=count, block=200)
-            if cache is not None:
-                print(cache)
-                cache = [json.loads(e.decode('utf-8')) for e in cache]
-            
-            return cache
+            return self.r.xread(name, count=count, block=200)
+
         except Exception as error:
             print("ERROR: ", error)
             return
