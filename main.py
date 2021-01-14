@@ -46,5 +46,6 @@ if __name__ == '__main__':
 
         except Exception as error:
             print(f"catch ERROR: {error}")
+            print(error)
             time.sleep(20)
 

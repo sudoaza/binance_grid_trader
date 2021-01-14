@@ -56,6 +56,17 @@ class BinanceSpotHttp(object):
         self.proxy_port = proxy_port
         self.r = redis.Redis(host='localhost', port=6379, db=0)
 
+    def cache(self, key):
+        try:
+            cache = self.r.get(key)
+            if cache is not None:
+                cache = json.load(cache.decode('utf-8'))
+            
+            return cache
+        except Exception as error:
+            print("ERROR: ", error)
+            return
+
     def build_parameters(self, params: dict):
         keys = list(params.keys())
         keys.sort()
@@ -92,7 +103,7 @@ class BinanceSpotHttp(object):
         return ticker
 
     def get_ticker_from_cache(self, symbol: str):
-        cache = json.load(r.get('bookTicker_' + symbol))
+        cache = self.cache('bookTicker_' + symbol)
         if cache is not None:
             # Websocket and HTTP api have different field names
             cache = {
@@ -192,7 +203,7 @@ class BinanceSpotHttp(object):
         return order
 
     def get_order_from_cache(self, client_order_id: str):
-        cache = json.load(r.get(client_order_id))
+        cache = self.cache(client_order_id)
         if cache is not None:
             cache = {
                 'clientOrderId': cache['c'],

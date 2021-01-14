@@ -47,7 +47,7 @@ class BinanceTrader(object):
 
         delete_orders = []
 
-        for order in (self.buy_orders, self.sell_orders):
+        for order in (self.buy_orders + self.sell_orders):
             check_order = self.http_client.get_order(
                 order.get('symbol', config.symbol),
                 client_order_id=buy_order.get('clientOrderId'))
