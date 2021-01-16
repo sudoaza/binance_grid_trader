@@ -60,7 +60,7 @@ class BinanceTrader(object):
                 elif check_order.get('status') == OrderStatus.FILLED.value:
                     logging.info(f"{order.get('side')} TX time: {datetime.now()}, price: {check_order.get('price')}, size: {check_order.get('origQty')}")
                     delete_orders.append(order)
-                    self.place_order(check_order.get('price'))
+                    self.place_order(self.avg_price)
 
                 elif check_order.get('status') ==  OrderStatus.NEW.value:
                     print(f"{order.get('side')} order is NEW")
@@ -76,15 +76,15 @@ class BinanceTrader(object):
                 self.sell_orders.remove(delete_order)
 
         if len(self.buy_orders) <= 0:
-            if self.bid_price > 0:
-                self.place_buy(self.bid_price)
+            if self.avg_price > 0:
+                self.place_buy(self.avg_price)
 
         elif len(self.buy_orders) > int(config.max_orders):
             self.cancel('BUY')
 
         if len(self.sell_orders) <= 0:
-            if self.ask_price > 0:
-                self.place_sell(self.ask_price)
+            if self.avg_price > 0:
+                self.place_sell(self.avg_price)
 
         elif len(self.sell_orders) > int(config.max_orders):
             self.cancel('SELL')

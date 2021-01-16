@@ -67,7 +67,7 @@ class BinanceSpotHttp(object):
 
     def stream(self, name, count):
         try:
-            result = self.r.xread({name: str(int((time.time()-3)*1000))+"-0" }, count=count, block=200)
+            result = self.r.xread({name: str(int((time.time()-3)*1000))+"-0" }, count=count, block=30)
             elem_list = []
             for key, entry in result[0][1]:
                 clean_dict = {}
@@ -143,7 +143,7 @@ class BinanceSpotHttp(object):
         return self.request('GET', path, query_dict)
 
     def get_avg_price(self, symbol: str):
-        cache = self.stream('stream_bookTicker_' + symbol, 100)
+        cache = self.stream('stream_bookTicker_' + symbol, 1000)
         sum_w = 0.0
         sum_v = 0.0
         for entry in cache:
