@@ -1,7 +1,6 @@
 import time
 import logging
 from trader.binance_trader import BinanceTrader
-from trader.binance_future_trader import BinanceFutureTrader
 from utils import config
 
 format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'

@@ -67,7 +67,15 @@ class BinanceSpotHttp(object):
 
     def stream(self, name, count):
         try:
-            return self.r.xread(name, count=count, block=200)
+            result = self.r.xread({name: str(int((time.time()-3)*1000))+"-0" }, count=count, block=200)
+            elem_list = []
+            for key, entry in result[0][1]:
+                clean_dict = {}
+                for key, value in entry.items(): 
+                    clean_dict[key.decode("utf-8")] = value.decode("utf-8") 
+  
+                elem_list.append(clean_dict)
+            return elem_list
 
         except Exception as error:
             print("ERROR: ", error)
@@ -136,7 +144,14 @@ class BinanceSpotHttp(object):
 
     def get_avg_price(self, symbol: str):
         cache = self.stream('stream_bookTicker_' + symbol, 100)
-        return (float(cache[-1]['a']) + float(cache[-1]['b'])) / 2
+        sum_w = 0.0
+        sum_v = 0.0
+        for entry in cache:
+            sum_w += float(entry['A'])
+            sum_v += float(entry['a']) * float(entry['A'])
+            sum_w += float(entry['B'])
+            sum_v += float(entry['b']) * float(entry['B'])
+        return sum_v / sum_w
 
     def get_client_order_id(self):
         """
